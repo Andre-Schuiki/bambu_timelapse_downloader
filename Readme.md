@@ -1,3 +1,6 @@
+# Demo
+![demo.gif](docs%2Fimages%2Fdemo.gif)
+
 # Usage
 
 ## run with default parameters
