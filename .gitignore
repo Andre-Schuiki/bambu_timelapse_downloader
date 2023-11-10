@@ -1,0 +1,6 @@
+/dist/
+/build/
+/timelapse/
+/logs/
+/venv/
+/bambu_timelapse_download.spec
