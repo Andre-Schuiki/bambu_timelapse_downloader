@@ -4,8 +4,10 @@
 bambu_timelapse_download.exe --ip 192.168.0.20 --pass 12345678
 
 ## save timelapse file in diffrent directory
-bambu_timelapse_download.exe --ip 192.168.0.20 --pass 12345678 --download_dir "Z:\Video\3D Druck\Timelapse"
+bambu_timelapse_download.exe --ip 192.168.0.20 --pass 12345678 --download_dir "C:\Video\3D Druck\Timelapse"
 
+## save timelapse file in diffrent directory & delete timelapse files from ftp after download
+bambu_timelapse_download.exe --ip 192.168.0.20 --pass 12345678 --download_dir "C:\Video\3D Druck\Timelapse" -d
 
 # Parameter
 | Name                 | Description                           | Required | Default   |
