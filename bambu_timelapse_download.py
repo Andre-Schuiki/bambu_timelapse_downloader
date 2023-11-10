@@ -103,6 +103,7 @@ def ftp_download(args):
             try:
                 logger.info('Looking avi files for download.')
                 ftp_timelapse_files = [f for f in ftp_client.nlst() if f.endswith('.avi')]
+                ftp_timelapse_files = [f for f in ftp_timelapse_files if f not in downloaded_files]
 
                 if ftp_timelapse_files:
                     logger.info(f'Found {len(ftp_timelapse_files)} files for download.')
@@ -111,22 +112,24 @@ def ftp_download(args):
                         filesize_mb = round(filesize/1024/1024, 2)
                         download_file_name = f
                         download_file_path = f'{args.download_dir}/{download_file_name}'
-                        if download_file_name not in downloaded_files:
-                            try:
-                                logger.info(f'Downloading file "{f}" size: {filesize_mb} MB')
-                                fhandle = open(download_file_path, 'wb')
-                                ftp_client.retrbinary('RETR %s' % f, fhandle.write)
-                                if args.delete_files_from_sd_card_after_download:
-                                    try:
-                                        ftp_client.delete(f)
-                                    except Exception as e:
-                                        logger.error('Failed to delete file after download, continue with next file')
-                                        continue
-                            except Exception as e:
-                                fhandle.close()
-                                os.remove(download_file_path)
-                                logger.error(f'failed to download file {f}: {e}, continue with next file')
-                                continue
+                        if filesize == 0:
+                            logger.info(f'Filesize of file {f} is 0, skipping file and continue')
+                            continue
+                        try:
+                            logger.info(f'Downloading file "{f}" size: {filesize_mb} MB')
+                            fhandle = open(download_file_path, 'wb')
+                            ftp_client.retrbinary('RETR %s' % f, fhandle.write)
+                            if args.delete_files_from_sd_card_after_download:
+                                try:
+                                    ftp_client.delete(f)
+                                except Exception as e:
+                                    logger.error('Failed to delete file after download, continue with next file')
+                                    continue
+                        except Exception as e:
+                            fhandle.close()
+                            os.remove(download_file_path)
+                            logger.error(f'failed to download file {f}: {e}, continue with next file')
+                            continue
             except ftplib.error_perm as resp:
                 if str(resp) == "550 No files found":
                     logger.error("No files in this directory")
