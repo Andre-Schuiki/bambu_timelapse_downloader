@@ -81,57 +81,63 @@ class ImplicitFTP_TLS(ftplib.FTP_TLS):
 
 
 def ftp_download(args):
-    if not os.path.exists(args.download_dir):
-        os.makedirs(args.download_dir)
+    try:
+        if not os.path.exists(args.download_dir):
+            os.makedirs(args.download_dir)
 
-    downloaded_files = [f for f in os.listdir(args.download_dir) if f.endswith('.avi')]
+        downloaded_files = [f for f in os.listdir(args.download_dir) if f.endswith('.avi')]
 
-    logger.info(f'Connecting to printer {args.user}@{args.ip}:{args.port}')
-    ftp_client = ImplicitFTP_TLS()
-    ftp_client.connect(host=args.ip, port=990)
-    ftp_client.login(user=args.user, passwd=args.password)
-    ftp_client.prot_p()
-    logger.info('Connected.')
-
-
-    if args.ftp_timelapse_folder in ftp_client.nlst():
-        ftp_client.cwd(args.ftp_timelapse_folder)
-        try:
-            logger.info('Looking avi files for download.')
-            ftp_timelapse_files = [f for f in ftp_client.nlst() if f.endswith('.avi')]
-
-            if ftp_timelapse_files:
-                logger.info(f'Found {len(ftp_timelapse_files)} files for download.')
-                for f in ftp_timelapse_files:
-                    filesize = ftp_client.size(f)
-                    filesize_mb = round(filesize/1024/1024, 2)
-                    download_file_name = f
-                    download_file_path = f'{args.download_dir}/{download_file_name}'
-                    if download_file_name not in downloaded_files:
-                        try:
-                            logger.info(f'Downloading file "{f}" size: {filesize_mb} MB')
-                            fhandle = open(download_file_path, 'wb')
-                            ftp_client.retrbinary('RETR %s' % f, fhandle.write)
-                            if args.delete_files_from_sd_card_after_download:
-                                try:
-                                    ftp_client.delete(f)
-                                except Exception as e:
-                                    logger.error('Failed to delete file after download, continue with next file')
-                                    continue
-                        except Exception as e:
-                            fhandle.close()
-                            os.remove(download_file_path)
-                            logger.error(f'failed to download file {f}: {e}, continue with next file')
-                            continue
-        except ftplib.error_perm as resp:
-            if str(resp) == "550 No files found":
-                logger.error("No files in this directory")
-            else:
-                raise
-    else:
-        logger.info(f'{args.ftp_timelapse_folder} not found on ftp server.')
+        logger.info(f'Connecting to printer {args.user}@{args.ip}:{args.port}')
+        ftp_client = ImplicitFTP_TLS()
+        ftp_client.connect(host=args.ip, port=990)
+        ftp_client.login(user=args.user, passwd=args.password)
+        ftp_client.prot_p()
+        logger.info('Connected.')
+    except Exception as e:
+        logger.error(f'FTP connection failed, error: "{e}"')
         sys.exit(1)
 
+    try:
+        if args.ftp_timelapse_folder in ftp_client.nlst():
+            ftp_client.cwd(args.ftp_timelapse_folder)
+            try:
+                logger.info('Looking avi files for download.')
+                ftp_timelapse_files = [f for f in ftp_client.nlst() if f.endswith('.avi')]
+
+                if ftp_timelapse_files:
+                    logger.info(f'Found {len(ftp_timelapse_files)} files for download.')
+                    for f in ftp_timelapse_files:
+                        filesize = ftp_client.size(f)
+                        filesize_mb = round(filesize/1024/1024, 2)
+                        download_file_name = f
+                        download_file_path = f'{args.download_dir}/{download_file_name}'
+                        if download_file_name not in downloaded_files:
+                            try:
+                                logger.info(f'Downloading file "{f}" size: {filesize_mb} MB')
+                                fhandle = open(download_file_path, 'wb')
+                                ftp_client.retrbinary('RETR %s' % f, fhandle.write)
+                                if args.delete_files_from_sd_card_after_download:
+                                    try:
+                                        ftp_client.delete(f)
+                                    except Exception as e:
+                                        logger.error('Failed to delete file after download, continue with next file')
+                                        continue
+                            except Exception as e:
+                                fhandle.close()
+                                os.remove(download_file_path)
+                                logger.error(f'failed to download file {f}: {e}, continue with next file')
+                                continue
+            except ftplib.error_perm as resp:
+                if str(resp) == "550 No files found":
+                    logger.error("No files in this directory")
+                else:
+                    raise
+        else:
+            logger.info(f'{args.ftp_timelapse_folder} not found on ftp server.')
+            sys.exit(1)
+    except Exception as e:
+        logger.error(f'Programm failed: {e}')
+        sys.exit(1)
 
 if __name__ == '__main__':
     logger = setup_logging()
