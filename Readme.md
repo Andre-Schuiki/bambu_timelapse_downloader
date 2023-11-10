@@ -2,9 +2,7 @@
 ![demo.gif](docs%2Fimages%2Fdemo.gif)
 
 # Usage
-> ⚠️ FTP download from the bambu printer is very slow, please be patient. 🙂 
-> 
-> a 10mb file took ~1-2 minutes, but maybe my printer just have not the best wifi signal..
+> ⚠️ FTP download from the bambu printer is very slow, please be patient. 🙂 A 10mb file took ~1-2 minutes, but maybe my printer just have not the best wifi signal..
 
 ## run with default parameters
 bambu_timelapse_download.exe --ip 192.168.0.20 --pass 12345678
